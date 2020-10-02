@@ -1,4 +1,4 @@
-#!/home/niax/Documentos/socket-introducao/venv/bin/python
+#!/home/nias/Code/python/socket-introducao/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
