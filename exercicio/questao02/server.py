@@ -30,10 +30,13 @@ def recive_message(cSockt):
     except:
         return False
 
-def inverter_palavra(palavra):
+def tranformar_palavra(palavra):
     if palavra:
-        invertida = ' '.join(p[::-1] for p in palavra.split())
-        return invertida.encode()
+        r = len(palavra)
+        palavra = list(palavra)
+        for p in range(r):
+            palavra[p] = chr(ord(palavra[p])+1)
+        return ''.join(palavra).encode()
 
 
 while True:
@@ -61,7 +64,7 @@ while True:
                 del clients[nSocks]
                 continue
 
-            message['data'] = inverter_palavra(message['data'].decode("utf-8"))
+            message['data'] = tranformar_palavra(message['data'].decode("utf-8"))
 
             print("RECEBEU UMA MENSSAGEM")
 
