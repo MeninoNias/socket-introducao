@@ -12,8 +12,9 @@ server_sock.bind((IP, PORT))
 server_sock.listen()
 
 list_sock = [server_sock]
-
 clients = {}
+
+print(f'Ouvindo conexões em {IP}: {PORT} ...')
 
 def recive_message(cSockt):
     try:
@@ -28,6 +29,12 @@ def recive_message(cSockt):
                 }
     except:
         return False
+
+def inverter_palavra(palavra):
+    if palavra:
+        invertida = ' '.join(p[::-1] for p in palavra.split())
+        return invertida.encode()
+
 
 while True:
     read_sockts, _, exception_sockts = select.select(list_sock, [], list_sock)
@@ -54,12 +61,13 @@ while True:
                 del clients[nSocks]
                 continue
 
-            user = clients[nSocks]
-            print("RECEBEU UMA MENSSAGEM DE {}".format(user['data'].decode("utf-8")))
+            message['data'] = inverter_palavra(message['data'].decode("utf-8"))
+
+            print("RECEBEU UMA MENSSAGEM")
 
             for client_sock in clients:
                 if client_sock != nSocks:
-                    client_sock.send(user['header']+user['data']+message['header']+message['data'])
+                    client_sock.send(message['header']+message['data'])
 
     for notified_sock in exception_sockts:
         list_sock.remove(notified_sock)
