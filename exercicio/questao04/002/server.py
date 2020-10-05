@@ -1,32 +1,26 @@
 import socket
-import select
+import _thread
 
-HEAD_LENGTH = 10
 IP = "127.0.0.1"
 PORT = 1234
 
-server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 server_sock.bind((IP, PORT))
-server_sock.listen()
 
-list_sock = [server_sock]
-clients = {}
+clientes = {}
 
 print(f'Ouvindo conexões em {IP}: {PORT} ...')
 
-def recive_message(cSockt):
+def recive_message():
     try:
-        message_sock = cSockt.recv(HEAD_LENGTH)
-        if not len(message_sock):
-            return False
+        while True:
+            data, addr = server_sock.recvfrom(2048)
+            message = data.decode()
 
-        message_len = int(message_sock.decode('utf-8').strip())
-        return {
-            "header": message_sock,
-            "data": cSockt.recv(message_len)
-                }
+            changed_message = tranformar_palavra(message)
+            server_sock.sendto(changed_message, clientes['recive'])
+
     except:
         return False
 
@@ -40,38 +34,9 @@ def tranformar_palavra(palavra):
 
 
 while True:
-    read_sockts, _, exception_sockts = select.select(list_sock, [], list_sock)
+    message_user, user_addr = server_sock.recvfrom(2048)
+    print(message_user.decode())
+    print("Conexão - {}".format(user_addr))
 
-    for nSocks in read_sockts:
-        if nSocks == server_sock:
-            cliente_sock, cliente_addres = server_sock.accept()
-
-            user = recive_message(cliente_sock)
-
-            if user is False:
-                continue
-
-            list_sock.append(cliente_sock)
-
-            clients[cliente_sock] = user
-            print("NOVA CONEXÃO ACEITA")
-        else:
-            message = recive_message(nSocks)
-
-            if message is False:
-                print("FECHANDO CONEXÃO")
-                list_sock.remove(nSocks)
-                del clients[nSocks]
-                continue
-
-            message['data'] = tranformar_palavra(message['data'].decode("utf-8"))
-
-            print("RECEBEU UMA MENSSAGEM")
-
-            for client_sock in clients:
-                if client_sock != nSocks:
-                    client_sock.send(message['header']+message['data'])
-
-    for notified_sock in exception_sockts:
-        list_sock.remove(notified_sock)
-        del clients[notified_sock]
+    clientes[message_user.decode()] = user_addr
+    _thread.start_new_thread(recive_message,())
